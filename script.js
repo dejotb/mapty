@@ -19,6 +19,8 @@ class Workout {
 }
 
 class Running extends Workout {
+  type = 'running';
+
   constructor(coords, distance, duration, cadence) {
     super(coords, distance, duration);
     this.cadence = cadence;
@@ -32,6 +34,8 @@ class Running extends Workout {
 }
 
 class Cycling extends Workout {
+  type = 'cycling';
+
   constructor(coords, distance, duration, elevationGain) {
     super(coords, distance, duration);
     this.elevationGain = elevationGain;
@@ -64,6 +68,8 @@ class App {
   #map;
 
   #mapEvent;
+
+  #workouts = [];
 
   constructor() {
     this._getPosition();
@@ -123,6 +129,8 @@ class App {
     const type = inputType.value;
     const distance = +inputDistance.value;
     const duration = +inputDuration.value;
+    const { lat, lng } = this.#mapEvent.latlng;
+    let workout;
 
     console.log(distance);
     console.log(duration);
@@ -137,6 +145,8 @@ class App {
         !allPositive(distance, duration, cadence)
       )
         return alert('Inputs have to be positive values');
+
+      workout = new Running([lat, lng], distance, duration, cadence);
     }
 
     // if workout cycling, create cycling object
@@ -147,28 +157,15 @@ class App {
         !allPositive(distance, duration)
       )
         return alert('Inputs have to be positive values');
+
+      workout = new Cycling([lat, lng], distance, duration, elevation);
     }
 
     // add new object to workout array
-
+    this.#workouts.push(workout);
+    console.log(workout);
     // render workout on map as marker
-    const { lat, lng } = this.#mapEvent.latlng;
-
-    console.log(lat, lng);
-
-    L.marker([lat, lng])
-      .addTo(this.#map)
-      .bindPopup(
-        L.popup({
-          maxWith: 250,
-          minWith: 100,
-          autoClose: false,
-          closeOnClick: false,
-          className: 'running-popup',
-        })
-      )
-      .setPopupContent('polo')
-      .openPopup();
+    this.renderWorkoutMarker(workout);
 
     // render workout on list
 
@@ -176,6 +173,22 @@ class App {
 
     inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value =
       '';
+  }
+
+  renderWorkoutMarker(workout) {
+    L.marker(workout.coords)
+      .addTo(this.#map)
+      .bindPopup(
+        L.popup({
+          maxWith: 250,
+          minWith: 100,
+          autoClose: false,
+          closeOnClick: false,
+          className: `${workout.type}-popup`,
+        })
+      )
+      .setPopupContent('workout')
+      .openPopup();
   }
 }
 
